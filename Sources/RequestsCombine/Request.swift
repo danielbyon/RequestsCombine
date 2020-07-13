@@ -38,9 +38,13 @@ public protocol Request {
 
 }
 
-public extension Request where Failure == Error {
+public extension Request {
 
     var retryCount: Int { 3 }
+
+}
+
+public extension Request where Failure == Error {
 
     func mapError(_ error: Error) -> Failure {
         return error
