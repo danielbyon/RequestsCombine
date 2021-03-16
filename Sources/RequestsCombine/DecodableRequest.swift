@@ -26,7 +26,7 @@
 import Foundation
 import Combine
 
-public protocol DecodableRequest: DataRequest where Success: Decodable {
+public protocol DecodableRequest: Request where Success: Decodable {
 
     func makeDecoder() -> JSONDecoder
 

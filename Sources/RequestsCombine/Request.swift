@@ -24,6 +24,7 @@
 //
 
 import Foundation
+import Combine
 
 public protocol Request {
 
@@ -34,6 +35,8 @@ public protocol Request {
     
     func makeURLRequest() throws -> URLRequest
 
+    func processData(_ data: Data, response: URLResponse) throws -> Success
+
     func mapError(_ error: Error) -> Failure
 
 }
@@ -41,6 +44,22 @@ public protocol Request {
 public extension Request {
 
     var retryCount: Int { 3 }
+
+    func publisher(session: URLSessionProtocol = URLSession.shared) -> AnyPublisher<Success, Failure> {
+        do {
+            let urlRequest = try makeURLRequest()
+            let publisher = session
+                .anyDataTaskPublisher(for: urlRequest)
+                .retry(retryCount)
+                .tryMap { try processData($0.data, response: $0.response) }
+                .mapError { mapError($0) }
+                .eraseToAnyPublisher()
+            return publisher
+        } catch {
+            return Fail(error: mapError(error))
+                .eraseToAnyPublisher()
+        }
+    }
 
 }
 
